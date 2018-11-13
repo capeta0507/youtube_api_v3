@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<link rel="stylesheet" href="css/you_re.css">
+<script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+<script src="https://unpkg.com/redux@latest/dist/redux.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<body>
+    <div id="root">
+        
+    </div>
+</body>
+<script type="text/babel">
+    var destination = document.querySelector("#root");
+    //將廣域變數設在外面 
+    const key = 'AIzaSyDEOmVaFjq3bCmu89tIeCuLFq7cldx5PXI';
+    const URL = 'https://www.googleapis.com/youtube/v3/search';
+    const videlURLID = 'https://www.youtube.com/embed/';
+    var options = {
+        q:'',
+        part:'snippet',
+        type:"video",
+        key:key,
+        maxResults:5,
+        pageToken: null
+    };
+
+    // 資料執行
+    function loadVids(){
+        console.log("loadVids ... " + options.q);
+        $.getJSON(URL,options,function(data){
+            console.log("Result : " + data);
+            let id = data.items[0].id.videoId;
+            console.log("First Video ID : " + id);
+       })
+    }
+
+    class TubeLists extends React.Component{
+        constructor(props){
+            super(props);
+        }
+        render(){
+            let myVlists = this.props.vlists;
+            // console.log(myVlists);
+            if (!myVlists || myVlists.length == 0){
+                console.log("No data...");
+                return (<div><h4>Waiting...</h4></div>);
+            } else {
+                // console.log("data = " + myVlists.length);
+                const listData = myVlists.map(
+                    (item,index) => {
+                        let xID = item.id.videoId;
+                        return(
+                            <div onClick={()=>{this.props.onSelID(xID)}} key={index} className="youarticle">
+                                <div className="details">
+                                    <h1>{index + 1}</h1>
+                                </div>
+                                <img src={item.snippet.thumbnails.default.url} alt="videoImage" className="thumb"/>
+                                <div className="details">
+                                    <h4>{item.snippet.title}</h4>
+                                    <p>{item.snippet.description.substr(0,100) + '...'}</p>
+                                </div>
+                            </div>
+                        )
+                    }
+                );
+                return (
+                    <div>{listData}</div>
+                );
+            }
+        }
+    }
+
+    class TubeApp extends React.Component{
+        constructor(props){
+            super(props);
+            // 利用onChange寫回
+            this.handleChange = this.handleChange.bind(this);
+            this.videoSearch = this.videoSearch.bind(this);
+            this.sayHello = this.sayHello.bind(this);
+            // 設定state變數
+            this.state={
+                searchStr:'',
+                videoItems : [],
+                vid : '',
+                vidTitle:''
+            }
+        }
+        sayHello(){
+            // alert("sayHello : " + this.state.searchStr);
+        }
+        // 取得input內的值
+        handleChange(e){
+            this.setState({
+                searchStr : e.target.value,
+            });
+        }
+        // 影片搜尋
+        videoSearch(){
+            // console.log("搜尋關鍵字 ..." + this.state.searchStr + "KEY : " + key);
+            options.q = this.state.searchStr;
+            // loadVids();
+            this.sayHello();
+            $.getJSON(URL,options,(data)=>{
+                // console.log("Result : " + JSON.stringify(data));
+                // console.log("JSON : " + JSON.parse(JSON.stringify(data)) );
+                // let id = data.items[0].id.videoId;
+                console.log("First Video Title : " + data.items[0].snippet.title);
+                this.setState({
+                    vid : data.items[0].id.videoId,
+                    vidTitle : data.items[0].snippet.title,
+                    videoItems : data.items
+                })            
+            });
+        }
+        componentDidMount(){
+            // let videoSrc = "https://www.youtube.com/embed/";
+        }
+        render(){
+            return(
+                <div>
+                    <div className="youheader">
+                        <div>
+                            <img src="img/youtube-logo-2016-png-1.png" alt="" className="logo"/>
+                        </div>
+                        <div className="insear">
+                            <input id="searchStr" type="text" onChange={this.handleChange}/>
+                            <button id="search" onClick={this.videoSearch}  >搜尋</button>
+                        </div>
+                        
+                    </div>
+                    <div id="video">
+                        <iframe width="560" height="315"  id="videoFrame" src={videlURLID + this.state.vid} frameBorder="0" allowFullScreen=""></iframe>
+                    </div>
+
+                    <div className="youmain">
+                        <TubeLists 
+                            onSelID={(xid)=> this.setState({vid : xid})} 
+                            vlists={this.state.videoItems}
+                        />
+                    </div>
+
+                </div>
+            )
+        }
+    }
+  
+    ReactDOM.render(
+        <TubeApp />,destination
+    );
+</script>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+    <script src="https://unpkg.com/redux@latest/dist/redux.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <title>Parent and Child Component</title>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+<script  type="text/babel">
+    var destination = document.querySelector("#root");
+
+    class Child extends React.Component {
+        constructor(props){
+            super(props);
+            this.state = {
+                myChileInput:''
+            };
+            this.changeHandel = this.changeHandel.bind(this);
+            this.clickHandel = this.clickHandel.bind(this);
+        }
+        changeHandel(e){
+            // console.log(e.target.value);
+            this.setState({
+                myChileInput:e.target.value
+            });
+        }
+        clickHandel(){
+            let x = this.state.myChileInput;
+            // console.log("Child x : " + x);
+            this.props.childClick(x);
+        }
+        render() {
+            return (
+                <div>
+                    <h4>Child</h4>
+                    <input type="text" onChange={this.changeHandel}/>
+                    <button onClick={this.clickHandel}>{this.props.text}</button>
+                </div>
+            );
+        }
+    }
+
+    class Parent extends React.Component {
+        constructor(props) {
+            super(props)
+            // Bind the this context to the handler function
+            this.handler = this.handler.bind(this);
+            // Set some state
+            this.state = {
+                messageShown: false,
+                myParentText:''
+            };
+        }
+        // This method will be sent to the child component
+        handler(x) {
+            console.log("from Child : " + x);
+            this.setState({
+                myParentText:x
+            });
+        }
+        // Render the child component and set the action property with the handler as value
+        render() {
+            return (
+                <div>
+                    <h1>Dad</h1>
+                    <p>接收 : {this.state.myParentText}</p>
+                    <Child text = "搜尋..." childClick={this.handler}/>
+                </div>
+            );
+
+        }
+    } 
+    
+    ReactDOM.render(
+        <Parent />,destination
+    );
+
+</script>
+</html>

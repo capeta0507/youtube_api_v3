@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Youtube Video Search</title>
+</head>
+<link rel="stylesheet" href="css/you.css">
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <img src="img/youtube-logo-2016-png-1.png" alt="" class="logo">
+            </div>
+            
+            <div class="insear">
+                <input id="searchStr" type="text" value="娛樂百分百 2018">
+                <button id="search" onclick="videoSearch()">搜尋</button>
+            </div>
+            <div class="insear">
+                <button id="prov" onclick="videoprev()">上一頁</button>
+                <button id="next" onclick="videonext()">下一頁</button>
+                <span id="pageNo">0</span>
+            </div>
+            
+        </header>
+        <div id="video">
+            <!-- <iframe width="660" height="415"  id="videoFrame" src="https://www.youtube.com/embed/-I_CIy3Uqx0" frameborder="0" allowfullscreen=""></iframe> -->
+        </div>
+        <main>
+            <!-- <article>
+                <img src="img/hqdefault.jpg" alt="" class="thumb">
+                <div class="details">
+                    <h4>Title</h4>
+                    <p>I am a descriptiion.</p>
+                </div>
+            </article> -->
+        </main>
+    </div>
+</body>
+<script src="JS/jquery-3.3.1.min.js"></script>
+<!-- <script src="https://apis.google.com/js/client.js"></script> -->
+<script>
+    // Global Variables 廣域變數
+    const key = 'AIzaSyDEOmVaFjq3bCmu89tIeCuLFq7cldx5PXI';
+    const URL = 'https://www.googleapis.com/youtube/v3/search';
+    const videlURLID = 'https://www.youtube.com/embed/'
+    var searchStr = $("#searchStr").val();
+    var options = {
+        q:searchStr,
+        part:'snippet',
+        type:"video",
+        key:key,
+        maxResults:5,
+        pageToken: null
+    };
+    var nextToken = null;
+    var prevToken = null;
+    var pageNo=0;
+    // 
+    // document ready
+    $(document).ready(function(){
+        $("main").on("click","article",function(){
+            var id = $(this).attr("data-key");
+            mainVid(id);
+        });
+        
+    });
+
+    // 搜尋 Video 關鍵字
+    function videoSearch(){
+        searchStr = $("#searchStr").val();
+        console.log("搜尋關鍵字 : " + searchStr);
+        options.q = searchStr;
+        nextToken = null;
+        prevToken = null;
+        options.pageToken = nextToken;
+        loadVids();
+        pageNo=1;
+        $("#pageNo").text(pageNo);
+    }
+
+    // 搜尋 Toutube JSON Data
+    function loadVids(){
+        $.getJSON(URL,options,function(data){
+            console.log(data);
+            var id = data.items[0].id.videoId;
+            nextToken=data.nextPageToken;
+            prevToken=data.prevPageToken;
+            $("main").html("");
+            // 顯示 Video 
+            mainVid(id);
+            // 顯示 List
+            resultsLoop(data);
+            // videonext(page);
+        })
+    }
+    function mainVid(id){
+        $("#video").html(`
+            <iframe width="560" height="315" src="${videlURLID}${id}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        `);
+    }
+    function resultsLoop(data){
+        $.each(data.items,function(i,item){
+        var thumb = item.snippet.thumbnails.medium.url;
+        var title = item.snippet.title;
+        var desc = item.snippet.description.substring(0, 20) + " ...";
+        var date = item.snippet.publishedAt.substring(0, 10);
+        var vid = item.id.videoId;
+        $("main").append(`
+            <article class="item"  data-key="${vid}">
+                <img src="${thumb}" alt="" class="thumb">
+                <div class="details">
+                    <h4>${title}</h4>
+                    <p>${desc}</p>
+                    <p>${date}</p>
+                </div>
+
+            </article>
+        `);
+
+    });   
+    
+}
+
+    function videonext(){
+        // console.log("page:" + pageNo);
+        // 修改 pageToken <- 下一頁
+        options.pageToken = nextToken;
+        loadVids();
+        pageNo++;
+        $("#pageNo").text(pageNo);
+
+    }
+
+    function videoprev(){
+        // console.log("page:" + pageNo);
+        if(pageNo ==1){
+            alert("處於第一頁 ... ")
+            return false;
+        }
+        // 修改 pageToken <- 上一頁
+        options.pageToken = prevToken;
+        loadVids();
+        pageNo--;
+        $("#pageNo").text(pageNo);
+    }
+        
+</script>
+</html>
